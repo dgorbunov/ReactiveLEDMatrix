@@ -1,4 +1,5 @@
 #include <FastLED.h>
+#include <math.h>
 #include <Adafruit_MCP3008.h>
 
 // Pin definitions (fixed)
@@ -14,6 +15,9 @@ CRGB leds[NUM_LEDS];
 
 Adafruit_MCP3008 adc0;
 Adafruit_MCP3008 adc1;
+
+//macro for getting index of x, y position
+#define XY(x, y) ((y) * sqrt(NUM_LEDS) + (x))
 
 int IRVals[16];
 // 10 bit range
@@ -31,6 +35,43 @@ void setup() {
   adc0.begin(ADC0_CS_PIN);
   adc1.begin(ADC1_CS_PIN);
 }
+
+// gets avg of all valid neighbors (out of 8 directions)
+int avgOfNeighbors(int x, int y) {
+    int size = sqrt(NUM_LEDS), sum = 0, count = 0;
+    int dx[] = {-1, 0, 1, -1, 1, -1, 0, 1};
+    int dy[] = {-1, -1, -1, 0, 0, 1, 1, 1};
+    
+    for (int i = 0; i < 8; i++) {
+        int nx = x + dx[i], ny = y + dy[i];
+        if (nx >= 0 && nx < size && ny >= 0 && ny < size) {
+            sum += leds[XY(nx, ny)];
+            count++;
+        }
+    }
+    return count > 0 ? sum / count : 0;
+}
+
+
+//converts index of led to position
+int positionOf(int i, int* x, int* y){
+  int size = sqrt(NUM_LEDS);
+  *x = i % size;
+  *y = i / size;
+}
+
+// modifies in place the LED matrix to smooth the data
+void convFilterLeds(){
+  for (int i = 0; i < NUM_LEDS; i++){
+    //assuming in linear order
+    int x, y;
+    positionOf(i, &x, &y);
+    printf("position of LED %d is (%d, %d)\n", i, x, y);
+
+    leds[i] = avgOfNeighbors(x, y);
+  }
+}
+
 
 void fadeall() { for(int i = 0; i < NUM_LEDS; i++) { leds[i].nscale8(250); } }
 
