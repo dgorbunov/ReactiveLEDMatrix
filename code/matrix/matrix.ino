@@ -58,16 +58,18 @@ void loop() {
   for (int i = 0; i < 4; i ++) {
     captureIR(i, 1);
   }
+
+  Serial.println(IRVals[3]);
 }
 
 void captureIR(int index, int adc) {
   index *= 2;
   int offset = 2 * adc;
   digitalWrite(IR_LED[index + adc], HIGH); 
-  delayMicroseconds(5);
+  delayMicroseconds(10);
   IRVals[index * 2 + offset] = readADC(index, adc);
   IRVals[index * 2 + 1 + offset] = readADC(index + 1, adc);
-  delayMicroseconds(5);
+  delayMicroseconds(10);
   digitalWrite(IR_LED[index + adc], LOW);
 }
 
