@@ -32,35 +32,37 @@ int indexOf(int x, int y){
 //converts index of led to position
 int positionOf(int i, int* x, int* y){
   if (i < 4) {
-    *x = i % 4;
+    *x = i;
     *y = 0;
   } else if (i < 8) {
-    *x = 8 - (i % 4);
+    *x = 8 - i;
     *y = 1;
   } else if (i < 12) {
-    *x = 8 + (i % 4);
+    *x = (8 + i) % 4;
     *y = 2;
   } else {
-    *x =(15 - i) % 4;
+    *x = (15 - i) %4;
     *y = 3;
   }
 }
 
 // gets avg of all valid neighbors (out of 8 directions)
-int avgOfNeighbors(int x, int y) {
-    int size = sqrt(NUM_LEDS), sum = 0, count = 0;
+CRGB avgDifOfNeighbors(int x, int y, int mult) {
+    int size = sqrt(NUM_LEDS), sum_r = 0, sum_g = 0, sum_b = 0, count = 0;
     int dx[] = {-1, 0, 1, -1, 1, -1, 0, 1};
     int dy[] = {-1, -1, -1, 0, 0, 1, 1, 1};
     
     for (int i = 0; i < 8; i++) {
         int nx = x + dx[i], ny = y + dy[i];
         if (nx >= 0 && nx < size && ny >= 0 && ny < size) {
-            sum += leds[indexOf(nx, ny)];
+            sum_r += leds[indexOf(nx, ny)][0] * 255 * mult;
+            sum_g += leds[indexOf(nx, ny)][1] * 255 * mult;
+            sum_b += leds[indexOf(nx, ny)][1] * 255 * mult;
             count++;
         }
     }
-    Serial.println(count);
-    return count > 0 ? sum / count : 0;
+    //Serial.println(sum);
+    return count > 0 ? CRGB(sum_r / count, sum_g / count, sum_b / count) : CRGB(0, 0, 0);
 }
 
 int IRVals[16];
@@ -94,7 +96,7 @@ void convFilterLeds(){
     Serial.print(y);
     Serial.println();
 
-    leds[i] = avgOfNeighbors(x, y);
+    leds[i] = avgDifOfNeighbors(x, y, 0.3);
   }
 }
 
@@ -113,9 +115,9 @@ void loop() {
       leds[index] = CRGB(255, 255, 255);
     }
 	}
-
+  delayMicroseconds(5 );
+  //convFilterLeds();
   fadeall();
-  convFilterLeds();
   FastLED.show();
 
   for (int i = 0; i < 4; i ++) {
