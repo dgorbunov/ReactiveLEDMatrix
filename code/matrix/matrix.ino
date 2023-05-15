@@ -32,7 +32,7 @@ enum mode {
   paint = 6
 };
 
-mode MoveMode = paint;
+mode MoveMode = toggle;
 
 void setup() { 
 	Serial.begin(115200);
@@ -113,7 +113,7 @@ void loop() {
 
 void fadeLEDs() { 
   for(int i = 0; i < NUM_LEDS; i++) { 
-    leds[i].nscale8(250); 
+    leds[i].nscale8(254.9); 
   } 
 }
 
