@@ -27,10 +27,12 @@ enum mode {
   distanceColor = 1,
   distanceBrightness = 2,
   distanceColorBrightness = 3,
-  heatMap = 4
+  heatMap = 4,
+  snake = 5,
+  paint = 6
 };
 
-mode MoveMode = distanceColor;
+mode MoveMode = paint;
 
 void setup() { 
 	Serial.begin(115200);
@@ -53,18 +55,19 @@ void setup() {
 }
 
 unsigned long hueTimer = 0;
+unsigned long snakeTimer = 0;
 
 void loop() { 
   static uint8_t hue = 0;
 
 	for(int i = 0; i < NUM_LEDS; i++) {
-    if (IRVals[i]->Current() > IRThresholds[i] * 1.2) {
-      // Account for LED sequence
+    // Account for LED sequence
       int index = i;
       if (i % 8 >= 4) {
         index = i > 11 ? 15 - i % 12 : 7 - i % 4;
       }
 
+    if (IRVals[i]->Current() > IRThresholds[i] * 1.2) {
       if (millis() - hueTimer > 10) {
         hueTimer = millis();
         hue++;
@@ -72,11 +75,34 @@ void loop() {
 
       int value = 255 * (IRVals[i]->Current() - IRThresholds[i]) / (1023 - IRThresholds[i]);
 
-      leds[index] = CHSV(hue, 255, value);
+      if (MoveMode == toggle || MoveMode == snake){
+        leds[index] = CHSV(hue, 255, 255);
+      } else if (MoveMode == distanceColor){
+        leds[index] = CHSV(value, 255, 255);
+      } else if (MoveMode == distanceBrightness){
+        leds[index] = CHSV(hue, 255, value);
+      } else if (MoveMode == distanceColorBrightness){
+        leds[index] = CHSV(value, 255, value);
+      } else if (MoveMode == heatMap){
+        leds[index] = CHSV(255 - (170 + (value / 255) * 75), 255, 255);
+      } else {
+        //by default we use toggle
+        leds[index] = CHSV(hue, 255, 255);
+      }
     }
+
+    if (MoveMode == snake){    
+      leds[(index + 1) % NUM_LEDS] = leds[index];
+      delay(5);
+    }
+
 	}
 
-  fadeLEDs();
+  
+
+  if (MoveMode != paint){
+    fadeLEDs();
+  }
   FastLED.show();
 
   for (int i = 0; i < 4; i ++) {
@@ -94,7 +120,7 @@ void fadeLEDs() {
 void calibrateIRThreshold(){
   setFilterWeight(20);
 
-  for (int i = 0; i < 100; i++){
+  for (int j = 0; j < 100; j++){
     for (int i = 0; i < 4; i ++) {
       captureIR(i, 0);
       captureIR(i, 1);
