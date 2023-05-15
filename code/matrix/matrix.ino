@@ -10,8 +10,10 @@ const int ADC0_CS_PIN = 10;
 const int ADC1_CS_PIN = 11;
 const int EDGE_CLK = 7;
 const int EDGE_DATA [2] = {19, 18}; // left, right
+int IRVals[16]; // 10 bit range
 
 const int NUM_LEDS = 16;
+const int BRIGHTNESS = 255;
 CRGB leds[NUM_LEDS];
 
 Adafruit_MCP3008 adc0;
@@ -65,9 +67,6 @@ CRGB avgDifOfNeighbors(int x, int y, int mult) {
     return count > 0 ? CRGB(sum_r / count, sum_g / count, sum_b / count) : CRGB(0, 0, 0);
 }
 
-int IRVals[16];
-// 10 bit range
-
 void setup() { 
 	Serial.begin(115200);
 
@@ -76,7 +75,7 @@ void setup() {
   }
   
 	FastLED.addLeds<WS2812B,LED_DATA_PIN,RGB>(leds, NUM_LEDS);
-	FastLED.setBrightness(5);
+	FastLED.setBrightness(BRIGHTNESS);
 
   adc0.begin(ADC0_CS_PIN);
   adc1.begin(ADC1_CS_PIN);
@@ -102,20 +101,29 @@ void convFilterLeds(){
 
 void fadeall() { for(int i = 0; i < NUM_LEDS; i++) { leds[i].nscale8(250); } }
 
+unsigned long hueTimer = 0;
+
 void loop() { 
+  static uint8_t hue = 0;
 	for(int i = 0; i < NUM_LEDS; i++) {
     //IRS are linear
-    if (IRVals[i] > 300) {
+    if (IRVals[i] > 400) {
       // Account for LED sequence
       int index = i;
       if (i % 8 >= 4) {
         index = i > 11 ? 15 - i % 12 : 7 - i % 4;
       }
 
-      leds[index] = CRGB(255, 255, 255);
+      if (millis() - hueTimer > 10) {
+        hueTimer = millis();
+        hue++;
+      }
+
+      leds[index] = CHSV(hue, 255, 255);
     }
 	}
-  delayMicroseconds(5 );
+
+  delayMicroseconds(5);
   //convFilterLeds();
   fadeall();
   FastLED.show();
@@ -127,8 +135,6 @@ void loop() {
   for (int i = 0; i < 4; i ++) {
     captureIR(i, 1);
   }
-
-  Serial.println(IRVals[3]);
 }
 
 void captureIR(int index, int adc) {
