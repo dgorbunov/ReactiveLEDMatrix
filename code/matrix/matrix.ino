@@ -11,10 +11,20 @@ const int ADC1_CS_PIN = 11;
 const int EDGE_CLK = 7;
 const int EDGE_DATA [2] = {19, 18}; // left, right
 int IRVals[16]; // 10 bit range
+int IRHistory[5][16];
+int IRThresholds[16]; //threshold value for each IR
 
 const int NUM_LEDS = 16;
-const int BRIGHTNESS = 255;
+const int BRIGHTNESS = 100;
 CRGB leds[NUM_LEDS];
+
+enum mode {
+  toggle = 0,
+  distanceColor = 1,
+  distanceBrightness = 2
+};
+
+mode MoveMode = distanceBrightness;
 
 Adafruit_MCP3008 adc0;
 Adafruit_MCP3008 adc1;
@@ -67,6 +77,50 @@ CRGB avgDifOfNeighbors(int x, int y, int mult) {
     return count > 0 ? CRGB(sum_r / count, sum_g / count, sum_b / count) : CRGB(0, 0, 0);
 }
 
+//uses history to return average value of IR at position j
+int getAvgOf(int j){
+  int s = 0;
+  for (int i = 0; i<5;i++){
+    s += IRHistory[i][j];
+  }  
+
+  return s/5;
+}
+
+//shifts all rows and leaves 0 empty for new data, and adds latest new IR DATA into it
+void updateHistory(){
+  for (int i = 1; i < 5; i++){
+    for (int j = 0; j < NUM_LEDS; j++){
+      IRHistory[i][j] = IRHistory[i-1][j];
+    }
+  }
+  for (int j = 0; j < NUM_LEDS; j++){
+    IRHistory[0][j] = IRVals[j];
+  }
+}
+
+void calibrateIRs(){
+  for (int i = 0; i < 10; i++){
+    for (int i = 0; i < 4; i ++) {
+      captureIR(i, 0);
+    }
+
+    for (int i = 0; i < 4; i ++) {
+      captureIR(i, 1);
+    }
+
+    updateHistory();
+  }
+
+  Serial.println("Calibration Results");
+  for (int i = 0; i < NUM_LEDS; i++){
+    IRThresholds[i] = getAvgOf(i) + 100;
+    Serial.print(i);
+    Serial.print(", thresh: ");
+    Serial.print(IRThresholds[i]);
+  }
+}
+
 void setup() { 
 	Serial.begin(115200);
 
@@ -79,6 +133,8 @@ void setup() {
 
   adc0.begin(ADC0_CS_PIN);
   adc1.begin(ADC1_CS_PIN);
+
+  calibrateIRs();
 }
 
 // modifies in place the LED matrix to smooth the data
@@ -105,9 +161,13 @@ unsigned long hueTimer = 0;
 
 void loop() { 
   static uint8_t hue = 0;
+
+  updateHistory();
+
 	for(int i = 0; i < NUM_LEDS; i++) {
     //IRS are linear
-    if (IRVals[i] > 400) {
+    if (IRVals[i] > IRThresholds[i]) {
+      //Serial.println(IRVals[i]);
       // Account for LED sequence
       int index = i;
       if (i % 8 >= 4) {
@@ -119,7 +179,20 @@ void loop() {
         hue++;
       }
 
-      leds[index] = CHSV(hue, 255, 255);
+      if (MoveMode == toggle){
+        leds[index] = CHSV(hue, 255, BRIGHTNESS);
+      } else if (MoveMode == distanceColor){
+        int val = getAvgOf(i);
+        int h = (val - IRVals[i]) * (val - IRVals[i]);
+        //Serial.println(val);
+        leds[index] = CHSV(val, 255, BRIGHTNESS);
+      } else if (MoveMode == distanceBrightness){
+        int val = getAvgOf(i);
+        int b = (val - IRVals[i] - 100); //* (val - IRVals[i]);
+        Serial.println(b);
+        leds[index] = CHSV(255, 255, b);
+      }
+      
     }
 	}
 
