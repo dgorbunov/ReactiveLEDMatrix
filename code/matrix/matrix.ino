@@ -18,9 +18,11 @@ CRGB leds[NUM_LEDS];
 Adafruit_MCP3008 adc0;
 Adafruit_MCP3008 adc1;
 
-const int FILTER_WEIGHT = 50; // 0 -> full smoothing, 100 -> no smoothing
+const int FILTER_WEIGHT = 65; // 0 -> full smoothing, 100 -> no smoothing
 ExponentialFilter<long> * IRVals[16];
 int IRThresholds[16];
+
+const float NOISE_THRESHOLD = 1.35;
 
 enum mode {
   toggle = 0,
@@ -32,7 +34,7 @@ enum mode {
   paint = 6
 };
 
-mode MoveMode = toggle;
+mode MoveMode = heatMap;
 
 void setup() { 
 	Serial.begin(115200);
@@ -62,12 +64,12 @@ void loop() {
 
 	for(int i = 0; i < NUM_LEDS; i++) {
     // Account for LED sequence
-      int index = i;
-      if (i % 8 >= 4) {
-        index = i > 11 ? 15 - i % 12 : 7 - i % 4;
-      }
+    int index = i;
+    if (i % 8 >= 4) {
+      index = i > 11 ? 15 - i % 12 : 7 - i % 4;
+    }
 
-    if (IRVals[i]->Current() > IRThresholds[i] * 1.2) {
+    if (IRVals[i]->Current() > IRThresholds[i]) {
       if (millis() - hueTimer > 10) {
         hueTimer = millis();
         hue++;
@@ -84,7 +86,7 @@ void loop() {
       } else if (MoveMode == distanceColorBrightness){
         leds[index] = CHSV(value, 255, value);
       } else if (MoveMode == heatMap){
-        leds[index] = CHSV(255 - (170 + (value / 255) * 75), 255, 255);
+        leds[index] = CHSV(90 - min((90 * value / 255) * 1.85, 90), 255, 255);
       } else {
         //by default we use toggle
         leds[index] = CHSV(hue, 255, 255);
@@ -95,10 +97,7 @@ void loop() {
       leds[(index + 1) % NUM_LEDS] = leds[index];
       delay(5);
     }
-
 	}
-
-  
 
   if (MoveMode != paint){
     fadeLEDs();
@@ -118,7 +117,12 @@ void fadeLEDs() {
 }
 
 void calibrateIRThreshold(){
-  setFilterWeight(20);
+  setFilterWeight(10);
+
+  for (int i = 0; i < 4; i++) {
+    setIR(i, 0);
+    setIR(i, 1);   
+  }
 
   for (int j = 0; j < 100; j++){
     for (int i = 0; i < 4; i ++) {
@@ -129,7 +133,7 @@ void calibrateIRThreshold(){
 
   Serial.println("Calibration Results");
   for (int i = 0; i < NUM_LEDS; i++){
-    IRThresholds[i] = IRVals[i]->Current();
+    IRThresholds[i] = IRVals[i]->Current() * NOISE_THRESHOLD;
     Serial.println(i + " " + IRThresholds[i]);
   }
 
@@ -142,14 +146,21 @@ void setFilterWeight(int filterWeight) {
   }
 }
 
+void setIR(int index, int adc) {
+  index *= 2;
+  int offset = 2 * adc;
+
+  IRVals[index * 2 + offset]->SetCurrent(readADC(index, adc));
+  IRVals[index * 2 + 1 + offset]->SetCurrent(readADC(index + 1, adc));  
+}
+
 void captureIR(int index, int adc) {
   index *= 2;
   int offset = 2 * adc;
-  digitalWrite(IR_LED[index + adc], HIGH); 
-  delayMicroseconds(10);
+
+  digitalWrite(IR_LED[index + adc], HIGH);
   IRVals[index * 2 + offset]->Filter(readADC(index, adc));
   IRVals[index * 2 + 1 + offset]->Filter(readADC(index + 1, adc));
-  delayMicroseconds(10);
   digitalWrite(IR_LED[index + adc], LOW);
 }
 
