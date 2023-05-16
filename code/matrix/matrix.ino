@@ -36,11 +36,8 @@ enum Mode {
   paintNeg = 7,
   paintBright = 8 
 };
-// paint on color light
-// paint with off
-// game to try to turn off all the lights as they slowly fade
 
-Mode currentMode = paintNeg;
+Mode currentMode = toggle;
 
 void setup() { 
 	Serial.begin(115200);
@@ -203,7 +200,7 @@ void readEdgeData() {
 
     float result = (currentTime - dataTimer) / pulseWidth;
     if (result <= 1.5) {
-      currentMode = paint;
+      currentMode = paintBright;
     } else if (result <= 2.5) {
       currentMode = distanceColor;
     } else if (result <= 3.5) {
@@ -212,7 +209,12 @@ void readEdgeData() {
       currentMode = toggle;
     } else if (result <= 5.5) {
       currentMode = heatMap;
-    }
+    } else if (result <= 6.5) {
+      currentMode = paint;
+    } else if (result <= 7.5){
+      currentMode = paintNeg;
+    } else if 
+    Serial.println(currentMode);
   }
 }
 
