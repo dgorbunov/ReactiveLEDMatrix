@@ -47,6 +47,9 @@ void setup() {
   for (int i = 0; i < 8; i++) {
     pinMode(IR_LED[i], OUTPUT);
   }
+
+  // For data propogation
+  pinMode(EDGE_CLK, INPUT);
   
 	FastLED.addLeds<WS2812B,LED_DATA_PIN,GRB>(leds, NUM_LEDS);
 	FastLED.setBrightness(BRIGHTNESS);
@@ -63,9 +66,10 @@ void setup() {
 
 unsigned long hueTimer = 0;
 unsigned long snakeTimer = 0;
-
 void loop() { 
   static uint8_t hue = 0;
+
+  readEdgeData();
 
 	for(int i = 0; i < NUM_LEDS; i++) {
     // Account for LED sequence
@@ -166,6 +170,36 @@ void calibrateIRThreshold(){
 void setFilterWeight(int filterWeight) {
   for (int i = 0; i < 16; i++) {
     IRVals[i]->SetWeight(filterWeight);
+  }
+}
+
+unsigned long dataTimer = 0;
+boolean readingData = false;
+const float pulseWidth = 50;
+
+void readEdgeData() {
+  int data = digitalRead(EDGE_CLK);
+
+  if (data == 0 && !readingData) {
+    dataTimer = millis();
+    readingData = true;
+  } else if (data == 1 && readingData) {
+    unsigned long currentTime = millis();
+    readingData = false;
+
+    float result = (currentTime - dataTimer) / pulseWidth;
+    Serial.println(result);
+    if (result <= 1.5) {
+      MoveMode = paint;
+    } else if (result <= 2.5) {
+      MoveMode = distanceColor;
+    } else if (result <= 3.5) {
+      MoveMode = distanceBrightness;
+    } else if (result <= 4.5) {
+      MoveMode = toggle;
+    } else if (result <= 5.5) {
+      MoveMode = heatMap;
+    }
   }
 }
 

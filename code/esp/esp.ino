@@ -1,19 +1,19 @@
 #include <FirebaseESP32.h>
 #include <WiFi.h>
-#include <SoftwareSerial.h>
 #include "config.h"
 
 #define TX_PIN 13
 
 FirebaseData firebaseData;
-EspSoftwareSerial::UART SWSerial;
 
 int previousMode = -1;
 
 void setup() {
   Serial.begin(9600);
-  SWSerial.begin(9600, EspSoftwareSerial::SWSERIAL_8N1, TX_PIN, TX_PIN, false, 256);
-  SWSerial.enableIntTx(false);
+  pinMode(TX_PIN, OUTPUT);
+  pinMode(LED_BUILTIN, OUTPUT);
+
+  digitalWrite(TX_PIN, HIGH);
 
   // connect to wifi.
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
@@ -35,13 +35,22 @@ void loop() {
     if (data != previousMode) {
       previousMode = data;
       Serial.println("Sending: " + (String)data);
-      sendSerial(&SWSerial, (byte)data);
+      sendPayload(data);
     }
   }
 }
 
-void sendSerial(EspSoftwareSerial::UART* ss, byte payload) {
-  ss->enableTx(true);
-  ss->write(payload);
-  ss->enableTx(false);
+void sendPayload(int data) {
+  int pulseWidth = 50;
+  int intervals = data + 1;
+
+  digitalWrite(LED_BUILTIN, HIGH);
+
+  for (int i = 0; i < intervals; i++) {
+    digitalWrite(TX_PIN, LOW);
+    delay(pulseWidth);
+  }
+
+  digitalWrite(TX_PIN, HIGH);
+  digitalWrite(LED_BUILTIN, LOW);
 }
