@@ -34,7 +34,7 @@ enum Mode {
   snake = 5,
   paint = 6,
   paintNeg = 7,
-  paintBright = 8
+  paintBright = 8 
 };
 // paint on color light
 // paint with off
