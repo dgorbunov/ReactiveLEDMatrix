@@ -18,11 +18,11 @@ CRGB leds[NUM_LEDS];
 Adafruit_MCP3008 adc0;
 Adafruit_MCP3008 adc1;
 
-const int FILTER_WEIGHT = 65; // 0 -> full smoothing, 100 -> no smoothing
+const int FILTER_WEIGHT = 60; // 0 -> full smoothing, 100 -> no smoothing
 ExponentialFilter<long> * IRVals[16];
 int IRThresholds[16];
 
-const float NOISE_THRESHOLD = 1.35;
+const float NOISE_THRESHOLD = 1.40;
 
 enum mode {
   toggle = 0,
@@ -86,7 +86,7 @@ void loop() {
       } else if (MoveMode == distanceColorBrightness){
         leds[index] = CHSV(value, 255, value);
       } else if (MoveMode == heatMap){
-        leds[index] = CHSV(90 - min((90 * value / 255) * 1.85, 90), 255, 255);
+        leds[index] = CHSV(80 - min((80 * value / 255) * 1.8, 80), 255, 255);
       } else {
         //by default we use toggle
         leds[index] = CHSV(hue, 255, 255);
