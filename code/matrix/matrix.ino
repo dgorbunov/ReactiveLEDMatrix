@@ -103,7 +103,7 @@ void loop() {
           break;
         case paint:
           leds[index] = CHSV(hue, 255, 255);
-          break
+          break;
         case paintNeg:
           leds[index] = CHSV(hue, 255, 0);
           break;
@@ -212,9 +212,9 @@ void readEdgeData() {
       currentMode = toggle;
     } else if (result <= 5.5) {
       currentMode = heatMap;
-    } else if (result <= 6.5) {
+    } else if (result <= 7.5) {
       currentMode = paint;
-    } else if (result <= 7.5){
+    } else if (result <= 8.5){
       currentMode = paintNeg;
     }
 
