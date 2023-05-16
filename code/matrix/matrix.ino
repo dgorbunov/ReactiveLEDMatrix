@@ -18,11 +18,11 @@ CRGB leds[NUM_LEDS];
 Adafruit_MCP3008 adc0;
 Adafruit_MCP3008 adc1;
 
-const int FILTER_WEIGHT = 65; // 0 -> full smoothing, 100 -> no smoothing
+const int FILTER_WEIGHT = 60; // 0 -> full smoothing, 100 -> no smoothing
 ExponentialFilter<long> * IRVals[16];
 int IRThresholds[16];
 
-const float NOISE_THRESHOLD = 1.35;
+const float NOISE_THRESHOLD = 1.40;
 
 enum mode {
   toggle = 0,
