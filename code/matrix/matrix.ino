@@ -40,7 +40,7 @@ enum Mode {
 // paint with off
 // game to try to turn off all the lights as they slowly fade
 
-Mode currentMode = paintBright;
+Mode currentMode = paintNeg;
 
 void setup() { 
 	Serial.begin(115200);
@@ -66,6 +66,7 @@ void setup() {
 }
 
 unsigned long hueTimer = 0;
+unsigned long brightTimer = 0;
 unsigned long snakeTimer = 0;
 void loop() { 
   static uint8_t hue = 0;
@@ -104,13 +105,10 @@ void loop() {
           leds[index] = CHSV(90 - min((90 * value / 255) * 1.85, 90), 255, 255);
           break;
         case paintNeg:
-          leds[index] = CHSV(hue, 255, 10);
+          leds[index] = CHSV(hue, 255, 0);
           break;
         case paintBright:
           leds[index] = CHSV(hue, 255, 255-value);
-          break;
-        default:
-          leds[index] = CHSV(hue, 255, 255);
           break;
       }
     }
@@ -124,7 +122,10 @@ void loop() {
   if (currentMode != paint && currentMode != paintBright && currentMode != paintNeg){
     fadeLEDs();
   } else if (currentMode == paintBright || currentMode == paintNeg){
-    brightenLEDs(hue); 
+    if (millis() - brightTimer > 100) {
+        brightTimer = millis();
+        brightenLEDs(); 
+      }
   }
 
   FastLED.show();
@@ -141,7 +142,7 @@ void fadeLEDs() {
   } 
 }
 
-void brightenLEDs(uint8_t h){
+void brightenLEDs(){
   for(int i = 0; i < NUM_LEDS; i++) { 
     if (leds[i].red < 0.1 && leds[i].green < 0.1 & leds[i].blue < 0.1){
       leds[i].red = 1;
@@ -149,9 +150,9 @@ void brightenLEDs(uint8_t h){
       leds[i].green = 1;
     }
     else if (leds[i].red < 255 && leds[i].green < 255 && leds[i].blue < 255){
-      leds[i].red *= 1.1;
-      leds[i].blue *= 1.1;
-      leds[i].green *= 1.1;
+      leds[i].red += 1 + (255 - leds[i].red)/125;
+      leds[i].blue += 1  + (255 - leds[i].red)/125;
+      leds[i].green += 1  + (255 - leds[i].red)/125;
     }
   } 
 }
