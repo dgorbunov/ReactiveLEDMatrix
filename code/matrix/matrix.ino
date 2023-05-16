@@ -13,7 +13,7 @@ const int EDGE_CLK = 7;
 const int EDGE_DATA [2] = {19, 18}; // left, right
 
 const int NUM_LEDS = 16;
-const int BRIGHTNESS = 255;
+const int BRIGHTNESS = 155;
 CRGB leds[NUM_LEDS];
 
 Adafruit_MCP3008 adc0;
@@ -33,13 +33,13 @@ enum Mode {
   heatMap = 4,
   snake = 5,
   paint = 6,
-  paintNeg = 7
+  paintBright = 7
 };
 // paint on color light
 // paint with off
 // game to try to turn off all the lights as they slowly fade
 
-Mode currentMode = toggle;
+Mode currentMode = paintBright;
 
 void setup() { 
 	Serial.begin(115200);
@@ -102,8 +102,8 @@ void loop() {
         case heatMap: 
           leds[index] = CHSV(90 - min((90 * value / 255) * 1.85, 90), 255, 255);
           break;
-        case paintNeg:
-          leds[index] = CHSV(hue, 255, 255-value);
+        case paintBright:
+          leds[index] = CHSV(hue, 255, 255-);
           break;
         default:
           leds[index] = CHSV(hue, 255, 255);
@@ -114,12 +114,12 @@ void loop() {
     if (currentMode == snake){
       leds[(index + 1) % NUM_LEDS] = leds[index];
       delay(5);
-    } else if (currentMode == paintNeg){
+    } else if (currentMode == paintBright){
       brightenLEDs(hue); 
     }
 	}
 
-  if (currentMode != paint && currentMode != paintNeg){
+  if (currentMode != paint && currentMode != paintBright){
     fadeLEDs();
   } 
 
@@ -139,7 +139,9 @@ void fadeLEDs() {
 
 void brightenLEDs(uint8_t h){
   for(int i = 0; i < NUM_LEDS; i++) { 
-    leds[i].nscale8(257);
+    leds[i].red *= 1.1;
+    leds[i].blue *= 1.1;
+    leds[i].green *= 1.1;
   } 
 }
 
