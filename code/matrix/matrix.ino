@@ -25,7 +25,7 @@ int IRThresholds[16];
 
 const float NOISE_THRESHOLD = 1.40;
 
-enum mode {
+enum Mode {
   toggle = 0,
   distanceColor = 1,
   distanceBrightness = 2,
@@ -39,7 +39,7 @@ enum mode {
 // paint with off
 // game to try to turn off all the lights as they slowly fade
 
-mode MoveMode = toggle;
+Mode currentMode = toggle;
 
 void setup() { 
 	Serial.begin(115200);
@@ -86,7 +86,7 @@ void loop() {
 
       int value = 255 * (IRVals[i]->Current() - IRThresholds[i]) / (1023 - IRThresholds[i]);
 
-      switch (MoveMode) {
+      switch (currentMode) {
         case toggle:
           leds[index] = CHSV(hue, 255, 255);
           break;
@@ -111,15 +111,15 @@ void loop() {
       }
     }
 
-    if (MoveMode == snake){
+    if (currentMode == snake){
       leds[(index + 1) % NUM_LEDS] = leds[index];
       delay(5);
-    } else if (MoveMode == paintNeg){
+    } else if (currentMode == paintNeg){
       brightenLEDs(hue); 
     }
 	}
 
-  if (MoveMode != paint && MoveMode != paintNeg){
+  if (currentMode != paint && currentMode != paintNeg){
     fadeLEDs();
   } 
 
@@ -158,10 +158,10 @@ void calibrateIRThreshold(){
     }
   }
 
-  Serial.println("Calibration Results");
+  // Serial.println("Calibration Results");
   for (int i = 0; i < NUM_LEDS; i++){
     IRThresholds[i] = IRVals[i]->Current() * NOISE_THRESHOLD;
-    Serial.println(i + " " + IRThresholds[i]);
+    // Serial.println(i + " " + IRThresholds[i]);
   }
 
   setFilterWeight(FILTER_WEIGHT);
@@ -188,17 +188,16 @@ void readEdgeData() {
     readingData = false;
 
     float result = (currentTime - dataTimer) / pulseWidth;
-    Serial.println(result);
     if (result <= 1.5) {
-      MoveMode = paint;
+      currentMode = paint;
     } else if (result <= 2.5) {
-      MoveMode = distanceColor;
+      currentMode = distanceColor;
     } else if (result <= 3.5) {
-      MoveMode = distanceBrightness;
+      currentMode = distanceBrightness;
     } else if (result <= 4.5) {
-      MoveMode = toggle;
+      currentMode = toggle;
     } else if (result <= 5.5) {
-      MoveMode = heatMap;
+      currentMode = heatMap;
     }
   }
 }

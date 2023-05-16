@@ -34,7 +34,7 @@ void loop() {
     int data = firebaseData.intData();
     if (data != previousMode) {
       previousMode = data;
-      Serial.println("Sending: " + (String)data);
+      // Serial.println("Sending: " + (String)data);
       sendPayload(data);
     }
   }
