@@ -1,5 +1,6 @@
 #include <FastLED.h>
 #include <Adafruit_MCP3008.h>
+#include <SoftwareSerial.h>
 #include <MegunoLink.h>
 #include <Filter.h>
 
@@ -38,7 +39,7 @@ enum mode {
 // paint with off
 // game to try to turn off all the lights as they slowly fade
 
-mode MoveMode = paintNeg;
+mode MoveMode = toggle;
 
 void setup() { 
 	Serial.begin(115200);
