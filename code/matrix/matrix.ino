@@ -13,7 +13,7 @@ const int EDGE_CLK = 7;
 const int EDGE_DATA [2] = {19, 18}; // left, right
 
 const int NUM_LEDS = 16;
-const int BRIGHTNESS = 155;
+const int BRIGHTNESS = 255;
 CRGB leds[NUM_LEDS];
 
 Adafruit_MCP3008 adc0;
@@ -33,7 +33,8 @@ enum Mode {
   heatMap = 4,
   snake = 5,
   paint = 6,
-  paintBright = 7
+  paintNeg = 7,
+  paintBright = 8
 };
 // paint on color light
 // paint with off
@@ -102,8 +103,11 @@ void loop() {
         case heatMap: 
           leds[index] = CHSV(90 - min((90 * value / 255) * 1.85, 90), 255, 255);
           break;
+        case paintNeg:
+          leds[index] = CHSV(hue, 255, 10);
+          break;
         case paintBright:
-          leds[index] = CHSV(hue, 255, 255-);
+          leds[index] = CHSV(hue, 255, 255-value);
           break;
         default:
           leds[index] = CHSV(hue, 255, 255);
@@ -114,14 +118,14 @@ void loop() {
     if (currentMode == snake){
       leds[(index + 1) % NUM_LEDS] = leds[index];
       delay(5);
-    } else if (currentMode == paintBright){
-      brightenLEDs(hue); 
-    }
+    } 
 	}
 
-  if (currentMode != paint && currentMode != paintBright){
+  if (currentMode != paint && currentMode != paintBright && currentMode != paintNeg){
     fadeLEDs();
-  } 
+  } else if (currentMode == paintBright || currentMode == paintNeg){
+    brightenLEDs(hue); 
+  }
 
   FastLED.show();
   
@@ -139,9 +143,16 @@ void fadeLEDs() {
 
 void brightenLEDs(uint8_t h){
   for(int i = 0; i < NUM_LEDS; i++) { 
-    leds[i].red *= 1.1;
-    leds[i].blue *= 1.1;
-    leds[i].green *= 1.1;
+    if (leds[i].red < 0.1 && leds[i].green < 0.1 & leds[i].blue < 0.1){
+      leds[i].red = 1;
+      leds[i].blue = 1;
+      leds[i].green = 1;
+    }
+    else if (leds[i].red < 255 && leds[i].green < 255 && leds[i].blue < 255){
+      leds[i].red *= 1.1;
+      leds[i].blue *= 1.1;
+      leds[i].green *= 1.1;
+    }
   } 
 }
 
