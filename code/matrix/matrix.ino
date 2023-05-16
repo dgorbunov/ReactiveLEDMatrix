@@ -101,6 +101,9 @@ void loop() {
         case heatMap: 
           leds[index] = CHSV(90 - min((90 * value / 255) * 1.85, 90), 255, 255);
           break;
+        case paint:
+          leds[index] = CHSV(hue, 255, 255);
+          break
         case paintNeg:
           leds[index] = CHSV(hue, 255, 0);
           break;
