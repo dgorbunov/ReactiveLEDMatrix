@@ -31,10 +31,14 @@ enum mode {
   distanceColorBrightness = 3,
   heatMap = 4,
   snake = 5,
-  paint = 6
+  paint = 6,
+  paintNeg = 7
 };
+// paint on color light
+// paint with off
+// game to try to turn off all the lights as they slowly fade
 
-mode MoveMode = heatMap;
+mode MoveMode = paintNeg;
 
 void setup() { 
 	Serial.begin(115200);
@@ -77,33 +81,45 @@ void loop() {
 
       int value = 255 * (IRVals[i]->Current() - IRThresholds[i]) / (1023 - IRThresholds[i]);
 
-      if (MoveMode == toggle || MoveMode == snake){
-        leds[index] = CHSV(hue, 255, 255);
-      } else if (MoveMode == distanceColor){
-        leds[index] = CHSV(value, 255, 255);
-      } else if (MoveMode == distanceBrightness){
-        leds[index] = CHSV(hue, 255, value);
-      } else if (MoveMode == distanceColorBrightness){
-        leds[index] = CHSV(value, 255, value);
-      } else if (MoveMode == heatMap){
-        leds[index] = CHSV(90 - min((90 * value / 255) * 1.85, 90), 255, 255);
-      } else {
-        //by default we use toggle
-        leds[index] = CHSV(hue, 255, 255);
+      switch (MoveMode) {
+        case toggle:
+          leds[index] = CHSV(hue, 255, 255);
+          break;
+        case distanceColor:
+          leds[index] = CHSV(value, 255, 255);
+          break;
+        case distanceBrightness:
+          leds[index] = CHSV(hue, 255, value);
+          break;
+        case distanceColorBrightness:
+          leds[index] = CHSV(value, 255, value);
+          break;
+        case heatMap: 
+          leds[index] = CHSV(90 - min((90 * value / 255) * 1.85, 90), 255, 255);
+          break;
+        case paintNeg:
+          leds[index] = CHSV(hue, 255, 255-value);
+          break;
+        default:
+          leds[index] = CHSV(hue, 255, 255);
+          break;
       }
     }
 
-    if (MoveMode == snake){    
+    if (MoveMode == snake){
       leds[(index + 1) % NUM_LEDS] = leds[index];
       delay(5);
+    } else if (MoveMode == paintNeg){
+      brightenLEDs(hue); 
     }
 	}
 
-  if (MoveMode != paint){
+  if (MoveMode != paint && MoveMode != paintNeg){
     fadeLEDs();
-  }
-  FastLED.show();
+  } 
 
+  FastLED.show();
+  
   for (int i = 0; i < 4; i ++) {
     captureIR(i, 0);
     captureIR(i, 1);
@@ -113,6 +129,12 @@ void loop() {
 void fadeLEDs() { 
   for(int i = 0; i < NUM_LEDS; i++) { 
     leds[i].nscale8(254.9); 
+  } 
+}
+
+void brightenLEDs(uint8_t h){
+  for(int i = 0; i < NUM_LEDS; i++) { 
+    leds[i].nscale8(257);
   } 
 }
 
