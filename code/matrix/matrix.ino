@@ -213,7 +213,9 @@ void readEdgeData() {
       currentMode = paint;
     } else if (result <= 7.5){
       currentMode = paintNeg;
-    } else if 
+    }
+
+    Serial.println(result);
     Serial.println(currentMode);
   }
 }
