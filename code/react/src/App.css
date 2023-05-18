@@ -1,0 +1,140 @@
+body {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  height: 100vh;
+  /* dark background */
+  background: #000;
+}
+
+.title {
+  display: flex;
+  flex-wrap: nowrap;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  flex: 1 1 15rem;
+  margin: 1rem;
+  padding: 0.5rem;
+  font-size: 1.2rem;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  width: 100%;
+  margin: auto;
+  height: 10%;
+  /*  rainbow background color */
+  background: linear-gradient(90deg, #ff0000, #ff8000, #ffff00, #80ff00, #00ff00, #00ff80, #00ffff, #0080ff, #0000ff, #8000ff, #ff00ff, #ff0080, #ff0000);
+  animation: rainbow 15s linear infinite; /* change ease-in to linear and double the animation duration */
+  background-size: 1000% 1000%;
+  background-repeat: no-repeat; /* prevent background from repeating */
+}
+
+@keyframes rainbow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%; /* change to 100% to move the background all the way to the right */
+  }
+  100% {
+    background-position: 0% 50%; /* change to 0% to move the background all the way to the left */
+  }
+}
+
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  /* bottom: 0; */
+  left: 0;
+  right: 0;
+  width: 100%;
+  top: 5rem;
+  /* bottom: 1rem;  */
+  height: 90vh;
+  overflow-y: auto;
+}
+
+.buttons button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1 1 30rem;
+  margin: 1rem;
+  border: none;
+  border-radius: 0.8rem;
+  height: 20%;
+  font-size: 2.3rem;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+}
+
+.buttons button.toggle-btn {
+  /* Rainbow Gradient */
+  background: linear-gradient(90deg, #ff0000, #ff8000, #ffff00, #80ff00, #00ff00, #00ff80, #00ffff, #0080ff, #0000ff, #8000ff, #ff00ff, #ff0080, #ff0000);
+}
+
+.buttons button.distanceColor-btn {
+  background-color: #2196f3;
+}
+
+.buttons button.distanceBrightness-btn {
+  background-color: #ffeb3b;
+}
+
+.buttons button.distanceColorBrightness-btn {
+  background-color: #9c27b0;
+}
+
+.buttons button.heatmap-btn {
+  background-color: #4caf50;
+}
+
+.buttons button.snake-btn {
+  background-color: #ff9800;
+}
+
+.buttons button.paint-btn {
+  background-color: #b71c1c;
+}
+
+.buttons button.paintNeg-btn {
+  background-color: #0000ff;
+}
+
+
+.buttons button:hover {
+  transform: translateY(-5px);
+  /* animation slide */
+  animation: colorShift 0.8s ease-in-out;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+}
+
+.buttons button::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 100%;
+  transition: all 1s ease-in-out;
+  z-index: -1;
+}
+
+
+@keyframes colorShift {
+  /* white silver flash on hover*/
+  0% {
+    background: #fff;
+  }
+}
